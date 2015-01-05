@@ -1,6 +1,7 @@
 #UTIL = $(wildcard ../*.cpp)
 #LDFLAGS += -lz -liconv
 #Path for SunOS
+include ../Makefile.in
 ifeq ($(findstring SunOS, $(UNIXNAME)), SunOS)
 	LDFLAGS += -lz -liconv
 else
@@ -15,4 +16,3 @@ endif
 base_path = ../..
 CFLAGS += -I../
 PROG = memcache_pool
-include ../Makefile.in
