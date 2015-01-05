@@ -702,8 +702,8 @@ static void mime_node_dump(const char* from_path, const char* dump_path,
 	off_t pos = (off_t) in.fseek(node->header_begin, SEEK_SET);
 	pbuf = (char*) acl_mymalloc(dlen);
 	printf(">>>%s: header begin: %ld, end: %ld, len: %ld\n",
-		__FUNCTION__, (long int) node->header_begin,
-		(long int) node->header_end, (long int) dlen);
+		__FUNCTION__, node->header_begin,
+		node->header_end, (long int) dlen);
 
 	int   ret;
 	if ((ret = in.read(pbuf, dlen, true)) < 0) {
@@ -719,8 +719,7 @@ static void mime_node_dump(const char* from_path, const char* dump_path,
 
 	dlen = node->body_end - node->body_begin;
 	printf(">>>%s: body begin: %ld, end: %ld, len: %ld\r\n",
-		__FUNCTION__, (long int) node->body_begin,
-		(long int) node->body_end, (long int) dlen);
+		__FUNCTION__, node->body_begin, node->body_end, (long int) dlen);
 
 	out.format(">---------body begin(length: %d)----------<\r\n", (int) dlen);
 
