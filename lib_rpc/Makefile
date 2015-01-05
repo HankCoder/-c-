@@ -35,6 +35,11 @@ ifeq ($(findstring FreeBSD, $(UNIXNAME)), FreeBSD)
 	CFLAGS += -DFREEBSD -D_REENTRANT
 endif
 
+# For Darwin
+ifeq ($(findstring Darwin, $(UNIXNAME)), Darwin)                               
+	EXTLIBS += -L/usr/lib -liconv                                          
+endif
+
 # For Linux
 ifeq ($(findstring Linux, $(UNIXNAME)), Linux)
 	ifeq ($CC, "gcc")

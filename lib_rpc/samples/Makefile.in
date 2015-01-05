@@ -29,6 +29,11 @@ ifeq ($(findstring FreeBSD, $(UNIXNAME)), FreeBSD)
 	SYSLIB = -lcrypt -lpthread
 endif
 
+#For Darwin
+ifeq ($(findstring Darwin, $(UNIXNAME)), Darwin)                               
+	EXTLIBS += -L/usr/lib -liconv                                          
+endif
+
 #Path for Linux
 ifeq ($(findstring Linux, $(UNIXNAME)), Linux)
 	ifeq ($CC, "gcc")
