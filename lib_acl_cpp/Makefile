@@ -6,7 +6,6 @@ ARFL    = rv
 #ARFL    = cru
 RANLIB  = ranlib
 
-#-Wcast-qual
 CFLAGS = -c -g -W -Wall \
 -Wpointer-arith -Werror -Wshadow -O3 \
 -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS \
@@ -16,6 +15,7 @@ CFLAGS = -c -g -W -Wall \
 -DHAS_POLARSSL
 #-DUSE_DYNAMIC
 # -Wcast-align
+#-Wcast-qual
 #just for freebsd's iconv.h
 CFLAGS += -I/usr/local/include
 
