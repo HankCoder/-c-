@@ -1,7 +1,8 @@
 #UTIL = $(wildcard ../*.cpp)
 #LDFLAGS += -lz -liconv
-#Path for SunOS
+base_path = ../..
 include ../Makefile.in
+#Path for SunOS
 ifeq ($(findstring SunOS, $(UNIXNAME)), SunOS)
 	LDFLAGS += -lz -liconv
 else
@@ -13,6 +14,5 @@ endif
 ifeq ($(findstring Darwin, $(UNIXNAME)), Darwin)
 	EXTLIBS += -L/usr/lib -liconv
 endif
-base_path = ../..
 CFLAGS += -I../
 PROG = memcache_pool
