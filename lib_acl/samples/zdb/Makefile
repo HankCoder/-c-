@@ -6,11 +6,12 @@ AR      = ar
 ARFL    = rv
 RANLIB  = ranlib
 
-CFLAGS = -c -g -W -Wcast-qual -Wcast-align \
+CFLAGS = -c -g -W -Wcast-qual \
 -Waggregate-return \
 -Wpointer-arith -Werror -Wshadow -O2 \
 -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS -D_USE_FAST_MACRO \
 -Wno-long-long
+# -Wcast-align
 # -pedantic -Wall 
 # -Wmissing-prototypes
 ###########################################################
