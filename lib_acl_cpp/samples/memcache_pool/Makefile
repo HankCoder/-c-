@@ -9,6 +9,9 @@ endif
 ifeq ($(findstring FreeBSD, $(UNIXNAME)), FreeBSD)
 	EXTLIBS += -L/usr/local/lib -liconv
 endif
+ifeq ($(findstring Darwin, $(UNIXNAME)), Darwin)
+	EXTLIBS += -L/usr/lib -liconv
+endif
 base_path = ../..
 CFLAGS += -I../
 PROG = memcache_pool
