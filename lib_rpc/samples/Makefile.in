@@ -31,7 +31,8 @@ endif
 
 #For Darwin
 ifeq ($(findstring Darwin, $(UNIXNAME)), Darwin)                               
-	EXTLIBS += -L/usr/lib -liconv                                          
+	CFLAGS += -DMACOSX                                                     
+	UNIXTYPE = MACOSX                                                      
 endif
 
 #Path for Linux

@@ -40,8 +40,9 @@ endif
 
 # For Darwin
 ifeq ($(findstring Darwin, $(UNIXNAME)), Darwin)                               
-	EXTLIBS += -L/usr/lib -liconv                                          
-endif
+	CFLAGS += -DMACOSX                                                     
+	UNIXTYPE = MACOSX                                                      
+endif 
 
 # For Linux
 ifeq ($(findstring Linux, $(UNIXNAME)), Linux)
