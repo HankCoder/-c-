@@ -8,10 +8,18 @@ ARFL    = rv
 RANLIB  = ranlib
 
 CFLAGS = -c -g -W -Wall -Wcast-qual \
--Waggregate-return -Wmissing-prototypes \
--Wpointer-arith -Werror -Wshadow -O2 \
--D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS -D_USE_FAST_MACRO \
--Wno-long-long
+-O2 \
+-D_REENTRANT \
+-D_POSIX_PTHREAD_SEMANTICS \
+-D_USE_FAST_MACRO \
+-Wpointer-arith \
+-Werror \
+-Wshadow \
+-Waggregate-return \
+-Wmissing-prototypes \
+-Wno-long-long \
+-Wno-invalid-source-encoding \
+-Wno-extended-offsetof
 # -Wcast-align
 ###########################################################
 #Check system:
