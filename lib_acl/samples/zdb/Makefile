@@ -81,9 +81,9 @@ OUTPATH = ./
 OBJ_OUTPATH = $(OUTPATH)
 
 #Project's objs
-SOURCES = $(wildcard *.c)
+SOURCES = $(wildcard *.cpp)
 INCLUDES = $(wildcard *.h)
-OBJS = $(patsubst %.c,$(OBJ_OUTPATH)%.o,$(SOURCES))
+OBJS = $(patsubst %.cpp,$(OBJ_OUTPATH)%.o,$(SOURCES))
 
 ###########################################################
 
@@ -100,7 +100,7 @@ RM:
 $(PROG_NAME): $(OBJS)
 	$(CC) -o $(PROG_NAME) $(OBJS) $(LIB_NAME_PATH) $(ALL_LIBS)
 
-$(OBJ_OUTPATH)%.o: %.c *.h
+$(OBJ_OUTPATH)%.o: %.cpp *.h
 	$(COMPILE) -o $@ $<
 
 clean:
