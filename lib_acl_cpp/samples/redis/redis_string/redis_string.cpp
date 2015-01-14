@@ -19,7 +19,7 @@ static void test_set(acl::redis_string& option, int n)
 		}
 		else if (i < 10)
 			printf("set key: %s ok\r\n", key.c_str());
-		option.get_client().reset();
+		//option.get_client().reset();
 	}
 }
 
@@ -38,7 +38,7 @@ static void test_setex(acl::redis_string& option, int n, int ttl)
 		}
 		else if (i < 10)
 			printf("setex key: %s, ttl: %d\r\n", key.c_str(), ttl);
-		option.get_client().reset();
+		// option.get_client().reset();
 	}
 }
 
@@ -60,7 +60,7 @@ static void test_setnx(acl::redis_string& option, int n)
 		}
 		printf("%s: ret: %d, key: %s\r\n", __FUNCTION__, ret,
 			key.c_str());
-		option.get_client().reset();
+		// option.get_client().reset();
 	}
 }
 
@@ -79,7 +79,7 @@ static void test_append(acl::redis_string& option, int n)
 			printf("append key: %s\r\n", key.c_str());
 			break;
 		}
-		option.get_client().reset();
+		// option.get_client().reset();
 	}
 }
 
@@ -103,7 +103,7 @@ static void test_get(acl::redis_string& option, int n)
 			printf("key: %s, value: %s, len: %d\r\n",
 				key.c_str(), value.c_str(),
 				(int) value.length());
-		option.get_client().reset();
+		// option.get_client().reset();
 	}
 }
 
@@ -126,7 +126,7 @@ static void test_getset(acl::redis_string& option, int n)
 		else if (i < 10)
 			printf("getset: key: %s, old value: %s\r\n",
 				key.c_str(), result.c_str());
-		option.get_client().reset();
+		// option.get_client().reset();
 	}
 }
 
@@ -146,7 +146,7 @@ static void test_strlen(acl::redis_string& option, int n)
 		else if (i < 10)
 			printf("key: %s's value's length: %d\r\n",
 				key.c_str(), ret);
-		option.get_client().reset();
+		// option.get_client().reset();
 	}
 }
 
@@ -182,7 +182,7 @@ static void test_mset(acl::redis_string& option, int n)
 				key2.c_str(), val2.c_str(),
 				key3.c_str(), val3.c_str());
 		}
-		option.get_client().reset();
+		// option.get_client().reset();
 		objs.clear();
 	}
 }
@@ -223,7 +223,7 @@ static void test_mget(acl::redis_string& option, int n)
 			for (it = result.begin(); it != result.end(); ++it)
 				printf("mget %s\r\n", (*it).c_str());
 		}
-		option.get_client().reset();
+		// option.get_client().reset();
 	}
 
 }

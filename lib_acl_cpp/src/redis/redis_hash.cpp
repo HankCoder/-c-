@@ -276,27 +276,30 @@ bool redis_hash::hgetall(const char* key, std::map<string, string>& result)
 		return false;
 	if (rr->get_size() == 0)
 		return true;
-	const std::vector<const redis_result*>* children = rr->get_children();
+
+	size_t size;
+	const redis_result** children = rr->get_children(&size);
 	if (children == NULL)
 		return false;
-	if (children->size() % 2 != 0)
+	if (size % 2 != 0)
 		return false;
+
 	string name_buf, value_buf;
-	std::vector<const redis_result*>::const_iterator cit;
-	for (cit = children->begin(); cit != children->end();)
+
+	for (size_t i = 0; i < size;)
 	{
-		if ((*cit)->get_type() != REDIS_RESULT_STRING)
+		rr = children[i];
+		if (rr->get_type() != REDIS_RESULT_STRING)
 		{
-			++cit;
-			++cit;
+			i += 2;
 			continue;
 		}
 		name_buf.clear();
 		value_buf.clear();
-		(*cit)->argv_to_string(name_buf);
-		++cit;
-		(*cit)->argv_to_string(value_buf);
-		++cit;
+		rr->argv_to_string(name_buf);
+		i++;
+		rr->argv_to_string(value_buf);
+		i++;
 		result[name_buf] = value_buf;
 	}
 	return true;
@@ -315,29 +318,33 @@ bool redis_hash::hgetall(const char* key, std::vector<string>& names,
 		return false;
 	if (rr->get_size() == 0)
 		return true;
-	const std::vector<const redis_result*>* children = rr->get_children();
+
+	size_t size;
+	const redis_result** children = rr->get_children(&size);
+
 	if (children == NULL)
 		return false;
-	if (children->size() % 2 != 0)
+	if (size % 2 != 0)
 		return false;
+
 	string buf;
-	std::vector<const redis_result*>::const_iterator cit;
-	for (cit = children->begin(); cit != children->end();)
+
+	for (size_t i = 0; i < size;)
 	{
-		if ((*cit)->get_type() != REDIS_RESULT_STRING)
+		rr = children[i];
+		if (rr->get_type() != REDIS_RESULT_STRING)
 		{
-			++cit;
-			++cit;
+			i += 2;
 			continue;
 		}
 		buf.clear();
-		(*cit)->argv_to_string(buf);
-		++cit;
+		rr->argv_to_string(buf);
+		i++;
 		names.push_back(buf);
 
 		buf.clear();
-		(*cit)->argv_to_string(buf);
-		++cit;
+		rr->argv_to_string(buf);
+		i++;
 		values.push_back(buf);
 	}
 	return true;
@@ -356,35 +363,38 @@ bool redis_hash::hgetall(const char* key, std::vector<const char*>& names,
 		return false;
 	if (rr->get_size() == 0)
 		return true;
-	const std::vector<const redis_result*>* children = rr->get_children();
+
+	size_t size;
+	const redis_result** children = rr->get_children(&size);
+
 	if (children == NULL)
 		return false;
-	if (children->size() % 2 != 0)
+	if (size % 2 != 0)
 		return false;
 
 	char* buf;
 	size_t len;
 	dbuf_pool* pool = conn_.get_pool();
 	std::vector<const redis_result*>::const_iterator cit;
-	for (cit = children->begin(); cit != children->end();)
+	for (size_t i = 0; i < size;)
 	{
-		if ((*cit)->get_type() != REDIS_RESULT_STRING)
+		rr = children[i];
+		if (rr->get_type() != REDIS_RESULT_STRING)
 		{
-			++cit;
-			++cit;
+			i += 2;
 			continue;
 		}
 
-		len = (*cit)->get_length() + 1;
+		len = rr->get_length() + 1;
 		buf = (char*) pool->dbuf_alloc(len);
-		(*cit)->argv_to_string(buf, len);
-		++cit;
+		rr->argv_to_string(buf, len);
+		i++;
 		names.push_back(buf);
 
-		len = (*cit)->get_length() + 1;
+		len = rr->get_length() + 1;
 		buf = (char*) pool->dbuf_alloc(len);
-		(*cit)->argv_to_string(buf, len);
-		++cit;
+		rr->argv_to_string(buf, len);
+		i++;
 		values.push_back(buf);
 	}
 	return true;
@@ -498,19 +508,22 @@ bool redis_hash::hkeys(const char* key, std::vector<string>& names)
 	if (result_->get_type() != REDIS_RESULT_ARRAY)
 		return false;
 
-	const std::vector<const redis_result*>* children =
-		result_->get_children();
+	size_t size;
+	const redis_result** children = result_->get_children(&size);
+
 	if (children == NULL)
 		return false;
 
 	string buf;
-	std::vector<const redis_result*>::const_iterator cit;
-	for (cit = children->begin(); cit != children->end(); ++cit)
+	const redis_result* rr;
+
+	for (size_t i = 0; i < size; i++)
 	{
-		if ((*cit)->get_type() != REDIS_RESULT_STRING)
+		rr = children[i];
+		if (rr->get_type() != REDIS_RESULT_STRING)
 			continue;
 		buf.clear();
-		(*cit)->argv_to_string(buf);
+		rr->argv_to_string(buf);
 		names.push_back(buf);
 	}
 

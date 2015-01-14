@@ -112,12 +112,10 @@ public:
 
 	/**
 	 * 当数据类型为 REDIS_RESULT_ARRAY 类型时，该函数返回所有的数组对象
-	 * @return {const std::vector<const redis_result*>*}
+	 * @param idx {size_t*} 当返回数组非空时，则该地址存放数组长度
+	 * @return {const const redis_result*}
 	 */
-	const std::vector<const redis_result*>* get_children() const
-	{
-		return &children_;
-	}
+	const redis_result** get_children(size_t* idx) const;
 
 	/**
 	 * 当数据类型为 REDIS_RESULT_ARRAY 类型时，该函数返回对应下标的结果对象
@@ -134,6 +132,8 @@ public:
 	{
 		return pool_;
 	}
+
+	void reset();
 
 private:
 	~redis_result();
@@ -153,7 +153,10 @@ private:
 	const char** argv_;
 	size_t* lens_;
 
-	std::vector<const redis_result*> children_;
+	//std::vector<const redis_result*>* children_;
+	const redis_result** children_;
+	size_t  children_size_;
+	size_t  children_idx_;
 };
 
 } // namespace acl

@@ -14,12 +14,14 @@ namespace acl
 
 redis_client::redis_client(const char* addr, int conn_timeout /* = 60 */,
 	int rw_timeout /* = 30 */, bool retry /* = true */)
-: conn_timeout_(conn_timeout)
+: used_(0)
+, conn_timeout_(conn_timeout)
 , rw_timeout_(rw_timeout)
 , retry_(retry)
 , argv_size_(0)
 , argv_(NULL)
 , argv_lens_(NULL)
+, result_(NULL)
 {
 	addr_ = acl_mystrdup(addr);
 	pool_ = NEW dbuf_pool();
@@ -28,17 +30,32 @@ redis_client::redis_client(const char* addr, int conn_timeout /* = 60 */,
 redis_client::~redis_client()
 {
 	acl_myfree(addr_);
+	if (result_)
+		result_->reset();
 	delete pool_;
+	acl_myfree(argv_);
+	acl_myfree(argv_lens_);
 }
 
 void redis_client::reset()
 {
-	argv_size_ = 0;
-	argv_ = NULL;
-	argv_lens_ = NULL;
+	// 只有当本连接对象被重复使用时才需要状态重置
+	if (used_ > 0)
+	{
+		if (result_)
+			result_->reset();
+		delete pool_;
+		pool_ = NEW dbuf_pool();
+	}
+}
 
-	delete pool_;
-	pool_ = NEW dbuf_pool();
+void redis_client::argv_space(size_t n)
+{
+	if (argv_size_ >= n)
+		return;
+	argv_size_ = n;
+	argv_ = (const char**) acl_mymalloc(n * sizeof(char*));
+	argv_lens_ = (size_t*) acl_mymalloc(n * sizeof(size_t));
 }
 
 bool redis_client::open()
@@ -191,8 +208,10 @@ redis_result* redis_client::get_object()
 
 const redis_result* redis_client::run(const string& request)
 {
-	// 重置协议处理状态
+	// 本连接使用次数递增
+	used_++;
 
+	// 重置协议处理状态
 	bool retried = false;
 
 	while (true)
@@ -218,9 +237,9 @@ const redis_result* redis_client::run(const string& request)
 			return NULL;
 		}
 
-		redis_result* rr = get_object();
-		if (rr != NULL)
-			return rr;
+		result_ = get_object();
+		if (result_ != NULL)
+			return result_;
 		conn_.close();
 
 		if (!retry_ || retried)
@@ -228,15 +247,6 @@ const redis_result* redis_client::run(const string& request)
 	}
 
 	return NULL;
-}
-
-void redis_client::argv_space(size_t n)
-{
-	if (argv_size_ >= n)
-		return;
-	argv_size_ = n;
-	argv_ = (const char**) pool_->dbuf_alloc(n * sizeof(char*));
-	argv_lens_ = (size_t*) pool_->dbuf_alloc(n * sizeof(size_t));
 }
 
 const string& redis_client::build_request(size_t argc, const char* argv[],
@@ -261,12 +271,13 @@ const string& redis_client::build_request(size_t argc, const char* argv[],
 /////////////////////////////////////////////////////////////////////////////
 
 /***************************************************************************/
-/*                           for set request                               */
 /***************************************************************************/
 
 const string& redis_client::build(const char* cmd, const char* key,
 	const std::map<string, string>& attrs, string* buf /* = NULL */)
 {
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	argc_ = 1 + attrs.size() * 2;
 	if (key != NULL)
 		argc_++;
@@ -302,6 +313,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 const string& redis_client::build(const char* cmd, const char* key,
 	const std::map<string, char*>& attrs, string* buf /* = NULL */)
 {
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	argc_ = 1 + attrs.size() * 2;
 	if (key != NULL)
 		argc_++;
@@ -337,6 +350,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 const string& redis_client::build(const char* cmd, const char* key,
 	const std::map<string, const char*>& attrs, string* buf /* = NULL */)
 {
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	argc_ = 1 + attrs.size() * 2;
 	if (key != NULL)
 		argc_++;
@@ -374,6 +389,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 const string& redis_client::build(const char* cmd, const char* key,
 	const std::map<int, string>& attrs, string* buf /* = NULL */)
 {
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	argc_ = 1 + attrs.size() * 2;
 	if (key != NULL)
 		argc_++;
@@ -411,6 +428,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 const string& redis_client::build(const char* cmd, const char* key,
 	const std::map<int, char*>& attrs, string* buf /* = NULL */)
 {
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	argc_ = 1 + attrs.size() * 2;
 	if (key != NULL)
 		argc_++;
@@ -448,6 +467,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 const string& redis_client::build(const char* cmd, const char* key,
 	const std::map<int, const char*>& attrs, string* buf /* = NULL */)
 {
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	argc_ = 1 + attrs.size() * 2;
 	if (key != NULL)
 		argc_++;
@@ -495,6 +516,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 			(unsigned long) values.size());
 	}
 
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	argc_ = 1 + names.size() * 2;
 	if (key != NULL)
 		argc_++;
@@ -538,6 +561,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 			(unsigned long) values.size());
 	}
 
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	argc_ = 1 + names.size() * 2;
 	if (key != NULL)
 		argc_++;
@@ -580,6 +605,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 			(unsigned long) names.size(),
 			(unsigned long) values.size());
 	}
+
+	reset(); // 重置内存状态，这样可以防止内存膨胀
 
 	argc_ = 1 + names.size() * 2;
 	if (key != NULL)
@@ -625,6 +652,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 			(unsigned long) names.size(),
 			(unsigned long) values.size());
 	}
+
+	reset(); // 重置内存状态，这样可以防止内存膨胀
 
 	argc_ = 1 + names.size() * 2;
 	if (key != NULL)
@@ -672,6 +701,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 			(unsigned long) values.size());
 	}
 
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	argc_ = 1 + names.size() * 2;
 	if (key != NULL)
 		argc_++;
@@ -718,6 +749,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 			(unsigned long) values.size());
 	}
 
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	argc_ = 1 + names.size() * 2;
 	if (key != NULL)
 		argc_++;
@@ -759,6 +792,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 	const char* names[], const char* values[], size_t argc,
 	string* buf /* = NULL */)
 {
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	argc_ = 1 + argc * 2;
 	if (key != NULL)
 		argc++;
@@ -794,6 +829,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 	const int names[], const char* values[], size_t argc,
 	string* buf /* = NULL */)
 {
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	argc_ = 1 + argc * 2;
 	if (key != NULL)
 		argc++;
@@ -833,6 +870,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 	const char* values[], const size_t values_len[],
 	size_t argc, string* buf /* = NULL */)
 {
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	argc_ = 1 + argc * 2;
 	if (key != NULL)
 		argc++;
@@ -873,6 +912,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 const string& redis_client::build(const char* cmd, const char* key,
 	const std::vector<string>& names, string* buf /* = NULL */)
 {
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	size_t argc = names.size();
 	argc_ = 1 + argc;
 	if (key != NULL)
@@ -904,6 +945,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 const string& redis_client::build(const char* cmd, const char* key,
 	const std::vector<char*>& names, string* buf /* = NULL */)
 {
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	size_t argc = names.size();
 	argc_ = 1 + argc;
 	if (key != NULL)
@@ -935,6 +978,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 const string& redis_client::build(const char* cmd, const char* key,
 	const std::vector<const char*>& names, string* buf /* = NULL */)
 {
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	size_t argc = names.size();
 	argc_ = 1 + argc;
 	if (key != NULL)
@@ -966,6 +1011,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 const string& redis_client::build(const char* cmd, const char* key,
 	const std::vector<int>& names, string* buf /* = NULL */)
 {
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	size_t argc = names.size();
 	argc_ = 1 + argc;
 	if (key != NULL)
@@ -1000,6 +1047,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 const string& redis_client::build(const char* cmd, const char* key,
 	const char* names[], size_t argc, string* buf /* = NULL */)
 {
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	argc_ = 1 + argc;
 	if (key != NULL)
 		argc_++;
@@ -1030,6 +1079,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 const string& redis_client::build(const char* cmd, const char* key,
 	const int names[], size_t argc, string* buf /* = NULL */)
 {
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	argc_ = 1 + argc;
 	if (key != NULL)
 		argc_++;
@@ -1064,6 +1115,8 @@ const string& redis_client::build(const char* cmd, const char* key,
 	const char* names[], const size_t lens[],
 	size_t argc, string* buf /* = NULL */)
 {
+	reset(); // 重置内存状态，这样可以防止内存膨胀
+
 	argc_ = 1 + argc;
 	if (key != NULL)
 		argc_++;

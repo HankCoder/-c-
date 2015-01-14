@@ -108,6 +108,7 @@ protected:
 	virtual bool open();
 
 private:
+	unsigned long long used_;
 	dbuf_pool* pool_;
 	socket_stream conn_;
 	char* addr_;
@@ -120,6 +121,7 @@ private:
 	size_t* argv_lens_;
 	string  request_;
 	string  buf_;
+	redis_result* result_;
 
 	void argv_space(size_t n);
 

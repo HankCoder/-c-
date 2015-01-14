@@ -14,6 +14,9 @@ redis_result::redis_result(dbuf_pool* pool)
 , idx_(0)
 , argv_(NULL)
 , lens_(NULL)
+, children_(NULL)
+, children_size_(10)
+, children_idx_(0)
 {
 	acl_assert(pool_ != NULL);
 }
@@ -31,6 +34,12 @@ void redis_result::operator delete(void* ptr acl_unused,
 	dbuf_pool* pool acl_unused)
 {
 	logger_error("DELETE NOW!");
+}
+
+void redis_result::reset()
+{
+	children_ = NULL;
+	children_idx_ = 0;
 }
 
 redis_result& redis_result::set_size(size_t size)
@@ -79,7 +88,7 @@ redis_result& redis_result::put(const char* buf, size_t len)
 size_t redis_result::get_size() const
 {
 	if (result_type_ == REDIS_RESULT_ARRAY)
-		return children_.size();
+		return children_idx_;
 	else if (result_type_ == REDIS_RESULT_STRING)
 	{
 		if (argv_ == NULL || lens_ == NULL)
@@ -192,17 +201,44 @@ size_t redis_result::argv_to_string(char* buf, size_t size) const
 
 redis_result& redis_result::put(const redis_result* rr, size_t idx)
 {
-	if (idx == 0)
-		children_.clear();
-	children_.push_back(rr);
+	if (children_ == NULL)
+		children_ = (const redis_result**) pool_->dbuf_alloc(
+				sizeof(redis_result*) * children_size_);
+	else if (idx == 0)
+		children_idx_ = 0;
+
+	// +1 是为了确保最后一个数组元素可以被设为 NULL
+	if (children_idx_ + 1 < children_size_)
+	{
+		children_[children_idx_++] = rr;
+		return *this;
+	}
+
+	children_size_ *= 2;
+	const redis_result** children =(const redis_result**)
+	       	pool_->dbuf_calloc(sizeof(redis_result*) * children_size_);
+
+	for (size_t i = 0; i < children_idx_; i++)
+		children[i] = children_[i];
+
+	children_ = children;
+	children_[children_idx_++] = rr;
+
 	return *this;
 }
 
 const redis_result* redis_result::get_child(size_t i) const
 {
-	if (i >= children_.size())
+	if (children_ == NULL || i >= children_idx_)
 		return NULL;
 	return children_[i];
+}
+
+const redis_result** redis_result::get_children(size_t* idx) const
+{
+	if (idx)
+		*idx = children_idx_;
+	return children_;
 }
 
 } // namespace acl
