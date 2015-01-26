@@ -6,7 +6,6 @@ namespace acl
 {
 
 class redis_client;
-class redis_result;
 
 class ACL_CPP_API redis_list : public redis_command
 {
@@ -95,7 +94,7 @@ private:
 		size_t timeout, std::pair<string, string>& result);
 	bool bpop(const char* cmd, const std::vector<string>& keys,
 		size_t timeout, std::pair<string, string>& result);
-	bool bpop(const string& req, std::pair<string, string>& result);
+	bool bpop(std::pair<string, string>& result);
 };
 
 } // namespace acl
