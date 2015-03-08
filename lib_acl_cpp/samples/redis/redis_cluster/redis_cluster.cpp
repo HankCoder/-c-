@@ -286,17 +286,10 @@ int main(int argc, char* argv[])
 	// Îª 0 Ê±£¬Ôò²»¼ì²â
 	cluster.set_retry_inter(1);
 
-<<<<<<< HEAD
 	// ÉèÖÃÖØ¶¨ÏòµÄ×î´ó·§Öµ£¬ÈôÖØ¶¨Ïò´ÎÊý³¬¹ý´Ë·§ÖµÔò±¨´í
 	cluster.set_redirect_max(nretry);
 
 	// µ±ÖØ¶¨Ïò´ÎÊý >= 2 Ê±Ã¿´ÎÔÙÖØ¶¨Ïò´Ëº¯ÊýÉèÖÃÐÝÏ¢µÄÊ±¼ä(ºÁÃë)
-=======
-	// è®¾ç½®é‡å®šå‘çš„æœ€å¤§é˜€å€¼ï¼Œè‹¥é‡å®šå‘æ¬¡æ•°è¶…è¿‡æ­¤é˜€å€¼åˆ™æŠ¥é”™
-	cluster.set_redirect_max(nretry);
-
-	// å½“é‡å®šå‘æ¬¡æ•° >= 2 æ—¶æ¯æ¬¡å†é‡å®šå‘æ­¤å‡½æ•°è®¾ç½®ä¼‘æ¯çš„æ—¶é—´(æ¯«ç§’)
->>>>>>> 5aed499842f0b0eeb879ed7e0bc687c58b03b502
 	cluster.set_redirect_sleep(nsleep);
 
 	cluster.init(NULL, addrs.c_str(), max_threads);
